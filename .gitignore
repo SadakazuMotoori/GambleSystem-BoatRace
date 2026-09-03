@@ -1,0 +1,40 @@
+# Python-generated files
+__pycache__/
+*.py[cod]
+build/
+dist/
+wheels/
+*.egg-info/
+
+# Virtual environment
+.venv/
+
+# Test and analysis caches
+.pytest_cache/
+.ruff_cache/
+.pyright/
+.mypy_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Local settings and secrets
+.env
+.env.*
+!.env.example
+
+# Local data and databases
+/data/
+/logs/
+/tmp/
+*.duckdb
+*.duckdb.wal
+*.sqlite
+*.sqlite3
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
