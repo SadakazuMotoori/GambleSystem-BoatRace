@@ -1,0 +1,47 @@
+[project]
+name = "boatrace"
+version = "0.1.0"
+description = "尼崎ボートレースの確率予測・価値判定・紙上運用システム"
+readme = "README.md"
+requires-python = ">=3.14,<3.15"
+dependencies = []
+
+[project.scripts]
+boat = "boatrace.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.12.9,<0.13"]
+build-backend = "uv_build"
+
+[tool.uv]
+required-version = ">=0.12.9,<0.13"
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.411",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.16.5",
+]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.format]
+line-ending = "lf"
+
+[tool.pyright]
+include = ["src", "tests"]
+pythonVersion = "3.14"
+typeCheckingMode = "strict"
+venvPath = "."
+venv = ".venv"
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-config --strict-markers"
+testpaths = ["tests"]
