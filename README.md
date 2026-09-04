@@ -24,7 +24,9 @@
 - 開発言語：Python 3.14系
 - パッケージ・Python管理：uv
 - 品質管理：Ruff、Pyright、pytest、pytest-cov
-- データベース：DuckDB 1.4.5を初期候補とする
+- CLI：Typer
+- 環境設定：Pydantic Settings
+- データベース：DuckDB 1.4.5
 - 対象環境：Windows 11 x64
 - Git管理対象：ソースコード、設定雛形、テスト、設計資料、依存関係ロック
 - Git管理対象外：`.env`、`.venv`、収集データ、データベース、ログ、生成物
@@ -88,8 +90,12 @@
 - Ruff、Pyright、pytest、pytest-covを開発依存関係として登録
 - Windowsの権限問題を避けるため`pyright[nodejs]`を採用
 - `nodejs-wheel-binaries`を`uv.lock`へ記録
-- CLIコマンド`uv run boat`を作成
-- 最小テストを作成
+- Typer、Pydantic Settings、DuckDB 1.4.5を実行時依存関係として登録
+- `.env`を型付き設定として読み込む機能を実装
+- 外部データ領域の9ディレクトリを検証・生成する機能を実装
+- CLIコマンド`uv run boat`と`uv run boat doctor`を実装
+- Python、設定、データ領域、7-Zip、DuckDBの環境診断を実装
+- 設定、データ領域、診断、CLIの自動テストを作成
 - `.gitignore`と`.gitattributes`を整備
 - 共通設定雛形`.env.example`を作成
 
@@ -103,9 +109,10 @@ uv run ruff format --check .
 uv run pyright
 uv run pytest
 uv run boat
+uv run boat doctor
 ```
 
-確認結果：Ruff合格、Pyrightエラー0件、pytest 1件合格、CLI起動成功。
+確認結果：Ruff合格、Pyrightエラー0件、pytest 14件合格、CLIと環境診断に成功。
 
 ### 職場PC
 
@@ -139,34 +146,19 @@ tmp/
 
 ### Git同期状態
 
-- 最終確認コミット：`30509e4 システム構築中`
-- 自宅PCの`main`と`origin/main`は一致
+- 使用ブランチ：`main`
 - `.env`、`.venv`、`BoatRaceData`は同期しない
-
-職場PCでは次回作業開始時に、次を実行して依存関係を更新する。
-
-```powershell
-git pull --ff-only
-uv sync --locked
-uv run pyright
-```
+- ソースコード、テスト、`pyproject.toml`、`uv.lock`、READMEをGitで同期する
 
 ## 5. 次に予定している作業
 
-工程0の残作業として、次の順序で進める。
+工程0の職場PC側実装とGit同期は完了している。次の順序で進める。
 
-1. 実行時依存関係を追加する
-   - CLI管理
-   - `.env`読込・設定検証
-   - DuckDB 1.4.5
-2. `BOATRACE_DATA_DIR`を読み込む設定モジュールを実装する
-3. 必要な9個のデータディレクトリを検証・生成する機能を実装する
-4. `boat doctor`を実装する
-   - Python、設定、データ領域、7-Zip、DuckDBの確認
-   - 問題発生時に原因と対処を表示
-5. 上記機能の自動テストを追加する
-6. 自宅PCと職場PCの両方で品質確認コマンドを実行する
-7. 工程0完了後、工程1のデータ取得元調査と収集設計へ進む
+1. 自宅PCで`git pull --ff-only`と`uv sync --locked`を実行する
+2. 自宅PCでも全品質検査と`boat doctor`を実行する
+3. 両PCで結果が一致した時点で工程0を完了とする
+4. 工程1として、尼崎向けデータ取得元の調査と収集仕様を確定する
+5. 最初のデータ取得処理と元データ保存処理を実装する
 
 ## 6. 作業再開時の確認
 
@@ -179,6 +171,7 @@ uv run ruff format --check .
 uv run pyright
 uv run pytest
 uv run boat
+uv run boat doctor
 ```
 
 環境固有の`.env`と外部データ領域が存在することも確認する。`.env`や実データをGitへ追加してはならない。
@@ -186,4 +179,4 @@ uv run boat
 ---
 
 最終更新：2026-09-03  
-現在地：工程0「開発基盤」の終盤。次は環境設定読込と`boat doctor`の実装。
+現在地：工程0「開発基盤」の職場PC側実装とGit同期が完了。次は自宅PCでの再検証。
