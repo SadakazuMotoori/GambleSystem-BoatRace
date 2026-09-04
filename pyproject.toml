@@ -4,7 +4,11 @@ version = "0.1.0"
 description = "尼崎ボートレースの確率予測・価値判定・紙上運用システム"
 readme = "README.md"
 requires-python = ">=3.14,<3.15"
-dependencies = []
+dependencies = [
+    "duckdb==1.4.5",
+    "pydantic-settings>=2.15.0",
+    "typer>=0.27.2",
+]
 
 [project.scripts]
 boat = "boatrace.cli:main"
