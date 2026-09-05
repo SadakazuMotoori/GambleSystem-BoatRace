@@ -4,6 +4,10 @@
 
 本書はプロジェクトの概要、開発工程、現在地を共有するためのREADMEであり、セッション移動時の引き継ぎ資料としても使用する。
 
+**現在地：工程0は職場PC・自宅PCの両方で検証完了。工程1は公式データの手動調査中。**
+
+次回は職場PCで、取得済み競走成績`k260902.lzh`の保存先・サイズ・SHA-256の実行結果をルークへ提示し、確認後に内部検査へ進む。
+
 ## 1. 本システムの概要
 
 過去成績、選手・モーター情報、展示情報、気象・水面状況、オッズなどを蓄積し、各買い目の的中確率と期待値を算出する。
@@ -30,7 +34,7 @@
 - データベース：DuckDB 1.4.5
 - 品質管理：Ruff、Pyright、pytest、pytest-cov
 - 対象環境：Windows 11 x64
-- 文字コード：ソースコードはUTF-8、公式B/KデータはCP932
+- 文字コード：ソースコードはUTF-8。番組表Bの確認済みサンプルはCP932。競走成績Kは展開後に確認する
 - Git管理対象：ソースコード、テスト、設定雛形、設計資料、依存関係ロック
 - Git管理対象外：`.env`、`.venv`、収集データ、データベース、ログ、生成物
 - 取得した元データは上書きせず、そのまま保存する
@@ -86,9 +90,9 @@
 - レポート自動生成
 - 人間が最終判断できるCLIまたは運用画面の整備
 
-## 4. 現時点で完了している作業
+## 4. 現時点の実装・調査状況
 
-### 工程0：開発基盤
+### 工程0：開発基盤（両PCで検証完了）
 
 - GitリポジトリとPythonパッケージを作成
 - ブランチ名を`main`に統一
@@ -109,7 +113,7 @@
 
 ### 工程0の品質確認
 
-次の確認はすべて成功している。
+職場PCと自宅PCの両方で、次の確認がすべて成功している。実行環境はPython 3.14.7（標準GIL）、uv 0.12.9、7-Zip 26.02、DuckDB 1.4.5。Python依存関係は`uv.lock`で揃えている。
 
 ```powershell
 uv run ruff check .
@@ -127,12 +131,17 @@ uv run boat doctor
 - pytest：14件合格
 - `boat`：起動成功
 - `boat doctor`：5項目すべて`[OK]`
+- Git：自宅PCで`git fetch --prune origin`後に`main`と`origin/main`の一致、検証後に未コミット変更なしを確認
 
-### 工程1：公式データ調査
+自宅PCでの最終確認済みコミット（本README更新前）：`bca1b67 プロジェクト概要`。今後の同期では、その時点のGit履歴を確認する。
+
+### 工程1：公式データ調査（手動調査中）
 
 BOAT RACE公式の日次ダウンロードを初期データ源として使用する。
 
-確認済みURL規則：
+現時点はPowerShellによる手動取得・形式調査まで。Pythonによるデータ取得、展開、パーサーは未実装。取得履歴の自動管理や、一時ファイルから正式名へ移動する処理も今後実装する。今回の手動取得では`raw`の正式名へ直接保存した。
+
+2026-09-02のB/Kファイル取得で確認したURL形式：
 
 ```text
 番組表：
@@ -142,7 +151,7 @@ https://www1.mbrace.or.jp/od2/B/{YYYYMM}/b{YYMMDD}.lzh
 https://www1.mbrace.or.jp/od2/K/{YYYYMM}/k{YYMMDD}.lzh
 ```
 
-取得処理では次を守る。
+今後実装する取得処理の方針：
 
 - 取得済みファイルは再取得しない
 - 元ファイルを上書きしない
@@ -201,8 +210,31 @@ C:\Gamble\BoatRaceData\staging\boatrace_official\program\2026\09\b260902\B260902
 - レース見出しと6艇分の選手行を確認
 - 1日分のファイルに複数会場を収録
 - 選手名には全角空白が含まれる
+
+今後の解析方針：
+
 - 選手行はCP932上の固定バイト幅として解析する
 - 単純な空白区切りによる解析は使用しない
+- 各列のバイト位置や例外行の扱いは、追加調査とテストで確定する
+
+### 競走成績サンプルの取得記録
+
+対象日：`2026-09-02`。職場PCで取得済み。内部検査・展開・文字コード・行構造の確認は未着手。
+
+元ファイル：
+
+```text
+C:\Gamble\BoatRaceData\raw\boatrace_official\result\2026\09\k260902.lzh
+```
+
+取得時の実行ログ：
+
+- サイズ：36,829 bytes
+- SHA-256：`AA44B6FD89F1B66E915611189E1F8C28F728A1B62C36DCAC8441A3BA8DC4870E`
+
+このハッシュは取得したファイルの同一性を確認するための記録。アーカイブの内容が正常かどうかは、次回の内部検査・展開で確認する。
+
+次回は第7節の実行結果を提示し、ルークが確認してから内部検査へ進む。
 
 ## 5. 開発環境とデータ領域
 
@@ -227,6 +259,8 @@ E:\Project\Gamble\BoatRace
 外部データ領域：
 E:\Project\Gamble\BoatRaceData
 ```
+
+自宅PCでも工程0の全品質検査、14件のテスト、`boat doctor`の5項目、CLI起動が成功している。コードと依存関係の同期は完了している。
 
 自宅PCには次のPC固有設定が存在する。
 
@@ -258,9 +292,11 @@ E:\Project\Gamble\BoatRaceData
 
 職場PCで取得した番組表・競走成績サンプルは、自宅PCへ自動同期されない。
 
-## 6. 自宅PCでの同期手順
+## 6. 自宅PCでの再同期手順
 
-自宅PCへ戻ったら、PowerShell 7で次を実行する。
+初回の同期と検証は完了済み。以下は、今後コードや依存関係の更新を自宅PCへ取り込む際の手順。PowerShell 7で実行する。
+
+最初の`git status`で未コミット変更があれば内容を確認してから進める。各コマンドでエラーが出た場合は、その結果をルークへ提示して確認する。
 
 ```powershell
 Set-Location -LiteralPath "E:\Project\Gamble\BoatRace"
@@ -292,27 +328,15 @@ git status --short --branch
 
 ## 7. 次回最初に行う作業
 
-競走成績ファイル取得コマンドの実行結果をルークへ提示する。
+作業環境は職場PC。取得済みの`k260902.lzh`について、保存先・サイズ・SHA-256の実行結果をルークへ提示する。以下は保存済みファイルの確認用コマンド。
 
-実行対象コマンド：
+新しいPowerShellウィンドウでは以前の変数を引き継がないため、必要なパスを定義し直す。
 
 ```powershell
-$brResultUrl = "https://www1.mbrace.or.jp/od2/K/202609/k260902.lzh"
+Set-Location -LiteralPath "C:\Gamble\BoatRace"
+
 $brResultDirectory = "C:\Gamble\BoatRaceData\raw\boatrace_official\result\2026\09"
 $brResultFile = Join-Path $brResultDirectory "k260902.lzh"
-
-New-Item `
-    -ItemType Directory `
-    -Path $brResultDirectory `
-    -Force |
-    Out-Null
-
-if (-not (Test-Path -LiteralPath $brResultFile)) {
-    Invoke-WebRequest `
-        -Uri $brResultUrl `
-        -OutFile $brResultFile `
-        -TimeoutSec 60
-}
 
 Get-Item -LiteralPath $brResultFile |
     Select-Object FullName, Length, LastWriteTime
@@ -324,13 +348,11 @@ Get-FileHash -LiteralPath $brResultFile -Algorithm SHA256
 
 ルークが次を確認する。
 
-- ファイルが正常に取得できたか
-- 保存先が正しいか
-- ファイルサイズが妥当か
-- SHA-256が取得できたか
-- 再取得防止が機能しているか
+- ファイルが存在し、保存先が第4節の記録と一致するか
+- サイズが36,829 bytesであるか
+- SHA-256が第4節の取得ログと一致するか
 
-確認が完了するまで、競走成績ファイルの展開処理へ進まない。
+ファイルが見つからない場合や記録と一致しない場合は、その結果から原因を確認する。確認が完了するまで、競走成績ファイルの内部検査・展開処理へ進まない。
 
 ## 8. その後に予定している作業
 
@@ -339,7 +361,7 @@ Get-FileHash -LiteralPath $brResultFile -Algorithm SHA256
 1. `k260902.lzh`の内部ファイル、サイズ、圧縮方式、CRCを確認
 2. `staging`領域へ上書きせず展開
 3. 展開後ファイルのサイズとSHA-256を記録
-4. CP932として読み込み、日本語表示を確認
+4. CP932を候補として読み込み、文字コードと日本語表示を確認
 5. K系ファイルの開始・終了マーカーを確認
 6. 尼崎会場コード`13`のブロックを抽出
 7. 競走成績のレース・着順・払戻情報の行構造を確認
@@ -352,7 +374,15 @@ Get-FileHash -LiteralPath $brResultFile -Algorithm SHA256
 
 ## 9. 作業再開時の確認
 
+- READMEを読み、現在地と次の作業を確認する
+- 作業は一つずつ提示し、KAZが実行結果を貼り、ルークが確認してから次へ進める
+- PowerShellの変数は、新しいウィンドウで必要なものを定義し直す
+
+職場PCではPowerShell 7で次を実行する。自宅PCでは第6節のパスと手順を使用する。未コミット変更がある場合は内容を確認し、コマンドのエラーを解決してから次へ進める。
+
 ```powershell
+Set-Location -LiteralPath "C:\Gamble\BoatRace"
+
 git status --short --branch
 git pull --ff-only
 uv sync --locked
@@ -370,6 +400,8 @@ uv run boat doctor
 
 ---
 
-最終更新：2026-09-04  
-現在地：工程0の職場PC側実装が完了し、工程1の公式データ調査を開始。  
-次の作業：競走成績`k260902.lzh`の取得結果をルークへ提示し、確認後に内部調査へ進む。
+最終更新：2026-09-05  
+現在地：工程0は職場PC・自宅PCの両方で検証完了。工程1は公式データの手動調査中で、Pythonによる収集処理は未実装。  
+番組表B：取得・展開・CP932読込・尼崎ブロック抽出まで確認済み。  
+競走成績K：取得済み。内部検査・展開・文字コード・構造確認は未着手。  
+次の作業：職場PCで`k260902.lzh`の保存先・サイズ・SHA-256の実行結果をルークへ提示し、確認後に内部検査へ進む。
